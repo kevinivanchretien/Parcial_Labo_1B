@@ -8,8 +8,73 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <time.h>
+
 
 #include "utn.h"
+
+
+
+
+static int myGets(char* cadena, int tamanio)
+{
+	int retorno=-1;
+	if(cadena != NULL && tamanio >0 && fgets(cadena,tamanio,stdin)==cadena)
+	{
+		fflush(stdin);
+		if(cadena[strlen(cadena)-1]=='\n')
+		{
+			cadena[strlen(cadena)-1]='\0';
+		}
+		retorno=0;
+	}
+	return retorno;
+}
+
+
+static int esNumerica(char* cadena)
+{
+	int retorno=-1;
+	int i=0;
+
+
+	if(cadena!= NULL && strlen(cadena)>0)
+	{
+		if(cadena[0]== '-')
+		{
+			i=1;
+		}
+		for(  ;cadena[i] != '\0';i++)
+		{
+			if(cadena[i] > '9' || cadena[i] < '0')
+			{
+				retorno=0;
+				break;
+			}
+		}
+	}
+	return retorno;
+}
+
+static int getInt(int* pResultado)
+{
+	int retorno=-1;
+	char buffer[64];
+
+	if(pResultado!=NULL)
+	{
+		if(myGets(buffer,sizeof(buffer))==0 && esNumerica(buffer))
+		{
+			*pResultado=atoi(buffer);//atoi cambia los caracteres a numeros
+			retorno=0;
+
+		}
+
+	}
+
+	return retorno;
+}
+
 int utn_getEntero(int* pResultado,char* mensaje, char* mensajeError, int maximo, int minimo, int reintentos)
 {
 	int todoOk=-1;
@@ -20,19 +85,21 @@ int utn_getEntero(int* pResultado,char* mensaje, char* mensajeError, int maximo,
 		do
 		{
 			printf("\n %s", mensaje);
-			scanf("%d", &bufferInt);
+			if(getInt(&bufferInt)==0)
+			{
+				if(bufferInt>=minimo && bufferInt<=maximo)
+				{
+					*pResultado=bufferInt;
+					todoOk=0;
+					break;
+				}
+				else
+				{
+					printf("\n %s ", mensajeError);
+					reintentos--;
+				}
+			}
 
-			if(bufferInt>=minimo && bufferInt<=maximo)
-			{
-				*pResultado=bufferInt;
-				todoOk=0;
-				break;
-			}
-			else
-			{
-				printf("\n %s \n", mensajeError);
-				reintentos--;
-			}
 		}while(reintentos>=0);
 	}
 	return todoOk;
@@ -42,7 +109,7 @@ int utn_getEntero(int* pResultado,char* mensaje, char* mensajeError, int maximo,
 int utn_getFlotante(float* pResultado,char mensaje[], char mensajeError[], float maximo, float minimo, int reintentos)
 {
 	int todoOk=-1;
-	int bufferFloat=0;
+	float bufferFloat=0;
 
 	if(pResultado != NULL && mensaje != NULL && mensajeError !=NULL && minimo<=maximo && reintentos >=0)
 	{
@@ -50,7 +117,7 @@ int utn_getFlotante(float* pResultado,char mensaje[], char mensajeError[], float
 		{
 			printf("\n %s", mensaje);
 			fflush(stdin);
-			if(scanf("%d", &bufferFloat)==1)//si scanf devuelve 1 porque se ingreso un numero
+			if(scanf("%f", &bufferFloat)==1)//si scanf devuelve 1 porque se ingreso un numero
 			{
 				if(bufferFloat>=minimo && bufferFloat<=maximo)
 				{
@@ -99,7 +166,33 @@ int utn_getCaracter(char* pResultado,char* mensaje, char* mensajeError, char max
 }
 
 
+int utn_getCadena(char* pResultado, char* mensaje, char* mensajeError,int maximo, int minimo,int reintentos)
+{
+	int todoOk;
+	char buffer[64];
 
+	if(pResultado != NULL && mensaje != NULL && mensajeError !=NULL &&maximo>=minimo && reintentos>0)
+	{
+		do{
+			printf("\n %s", mensaje);
+			gets(buffer);
+			if(strlen(buffer)>=minimo &&  strlen(buffer)<=maximo)
+			{
+				strcpy(pResultado,buffer);
+				todoOk=0;
+				break;
+			}
+			else
+			{
+				printf("\n %s \n", mensajeError);
+
+				reintentos--;
+			}
+		}while(reintentos>=0);
+
+	}
+	return todoOk;
+}
 
 int funcionSalir(char* pRespuesta, char* mensaje, char* mensajeError,int reintentos)
 {
@@ -131,6 +224,18 @@ int funcionSalir(char* pRespuesta, char* mensaje, char* mensajeError,int reinten
 	return todoOk;
 }
 
+void convertirMayuscula(char cadena[], int size)
+{
+	int i;
+	for(i=0;i <size;i++)
+	{
+		cadena[i]=toupper(cadena[i]);
+	}
+	return;
+}
+
+
+
 int menu()
 {
 	int opcion=0;
@@ -151,24 +256,59 @@ int menu()
 
 char subMenuPeliculas()
 {
-	char opcion;
+	int opcion;
 
-	printf("A-ALTAS.\n");// TIENEN QUE SER HARCODEADAS
-	printf("B-MODIFICAR.\n");// BAJA LOGICA. TAMBIEN DAR DE BAJA LOS ACTORES AFECTADOS
-	printf("C-CALCULAR RECAUDACION.\n"); // SE CALCULARA DE MANERA ALEATORIA LA RECAUDACION
+	printf("1-ALTAS.\n");// TIENEN QUE SER HARCODEADAS
+	printf("2-MODIFICAR.\n");// BAJA LOGICA. TAMBIEN DAR DE BAJA LOS ACTORES AFECTADOS
+	printf("3-CALCULAR RECAUDACION.\n"); // SE CALCULARA DE MANERA ALEATORIA LA RECAUDACION
+	printf("4-<-Menu Principal.\n");
+	utn_getEntero(&opcion,"Opcion: ", "\nError opciones del 1 al 3",4,1,2);
 
-	utn_getCaracter(&opcion,"\nOpcion: ", "\nError ",'a','c',3);
 
 	return opcion;
 }
 
 
 
-void convertirMayuscula(char cadena[], int size)
+int utn_getDouble(double* pResultado,char* mensaje, char* mensajeError, int maximo, int minimo,int reintentos)
 {
-	int i;
-	for(i=0;i <size;i++)
+	int todoOk=-1;
+	double buffer=0;
+
+	if(pResultado != NULL && mensaje != NULL && mensajeError !=NULL && minimo<=maximo && reintentos >=0)
 	{
-		cadena[i]=toupper(cadena[i]);
+		do
+		{
+			printf("\n %s", mensaje);
+			fflush(stdin);
+			if(scanf("%lf", &buffer)==1)//si scanf devuelve 1 porque se ingreso un numero
+			{
+				if(buffer>=minimo && buffer<=maximo)
+				{
+					*pResultado=buffer;
+					todoOk=0;
+					break;
+				}
+				else
+				{
+					printf("\n %s \n", mensajeError);
+					reintentos--;
+				}
+			}
+		}while(reintentos>=0);
 	}
+	return todoOk;
+}
+
+
+int numeroAleatorio(int maximo, int minimo)
+{
+	int resultado=0;
+    double numero=0;
+
+    numero = rand()% (maximo-minimo)+maximo;
+    printf("\n %lf\n ", numero);
+
+
+	return resultado;
 }

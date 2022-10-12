@@ -10,6 +10,9 @@
 
 #include "fecha.h"
 
+#define LIBRE 0
+#define OCUPADO 1
+
 typedef struct
 {
 	int codigoPelicula;
@@ -17,7 +20,7 @@ typedef struct
 	int duracion;
 	char director[25];
 	eFecha estreno;
-	int recaudacion;
+	double recaudacion;
 	int oscar;// 1 si 0 no
 	int isEmpty;
 
@@ -34,3 +37,11 @@ void mostrarUnaPelicula(ePelicula peliculas);
 void mostrarPeliculas(ePelicula peliculas[], int size);
 
 int harcodearPeliculas(ePelicula peliculas[], int size);
+
+int buscarEspacioLibre(ePelicula peliculas[], int size);
+
+int buscarCodigoPelicula(ePelicula peliculas[], int size, int valorBuscado);
+
+int bajaPeliculas(ePelicula peliculas[],int size, int indice);
+
+int altaPeliculas(ePelicula peliculas[], int size, int indice, int* id);
